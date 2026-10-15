@@ -229,14 +229,19 @@ def ensure_masters(stdout=None):
     return groups
 
 
-def ensure_users(groups, password, stdout=None):
+def ensure_users(groups, password, stdout=None, reset=False):
     if not User.objects.filter(username="admin").exists():
         User.objects.create_superuser("admin", "admin@fitout.example", password, first_name="Admin")
     for username, first, last, roles in DEMO_USERS:
         user, created = User.objects.get_or_create(username=username, defaults={"first_name": first, "last_name": last})
-        if created:
+        if created or reset:
             user.set_password(password)
             user.save()
         user.groups.set([groups[r] for r in roles])
+    if reset:
+        admin = User.objects.get(username="admin")
+        admin.set_password(password)
+        admin.is_active = admin.is_staff = admin.is_superuser = True
+        admin.save()
     if stdout:
-        stdout.write(f"Users: admin + {', '.join(u[0] for u in DEMO_USERS)} (password: {password})")
+        stdout.write(f"Users: admin + {', '.join(u[0] for u in DEMO_USERS)}" + (" (passwords reset)" if reset else ""))

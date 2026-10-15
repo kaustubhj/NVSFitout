@@ -11,11 +11,13 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--demo", action="store_true", help="Load the end-to-end demo scenario")
         parser.add_argument("--password", default="Fitout@123", help="Password for the created users")
+        parser.add_argument("--reset-passwords", action="store_true",
+                            help="Also set this password on admin and the standard users that already exist")
 
     def handle(self, *args, **opts):
         with transaction.atomic():
             groups = ensure_masters(self.stdout)
-            ensure_users(groups, opts["password"], self.stdout)
+            ensure_users(groups, opts["password"], self.stdout, reset=opts["reset_passwords"])
             if opts["demo"]:
                 from sales.models import Lead
 
