@@ -1,0 +1,8 @@
+{% extends "print/base_print.html" %}{% load erp %}
+{% block doctitle %}STOCK ISSUE VOUCHER{% endblock %}
+{% block body %}
+<p><strong>Project:</strong> {{ obj.project }} · <strong>Warehouse:</strong> {{ obj.warehouse }} · <strong>Issued to:</strong> {{ obj.issued_to }} · <strong>MR:</strong> {{ obj.requisition.number|default:"—" }}</p>
+<table><thead><tr><th>Item</th><th class="num">Qty</th><th>UoM</th><th>Bin</th></tr></thead>
+<tbody>{% for l in obj.lines.all %}<tr><td>{{ l.product }}</td><td class="num">{{ l.qty|floatformat:-3 }}</td><td>{{ l.product.uom }}</td><td>{{ l.bin|default:"" }}</td></tr>{% endfor %}</tbody></table>
+<div class="sign"><div>Issued by</div><div>Received by (site)</div></div>
+{% endblock %}

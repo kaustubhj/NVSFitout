@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block crumbs %}Reports / {{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ title }}</h1><div class="btns">{% if back %}<a class="btn ghost" href="{{ back }}">Back</a>{% endif %}<a class="btn ghost" href="?{{ csv_query }}">Export CSV</a><button class="btn ghost" onclick="window.print()">Print</button></div></div>
+{% if form %}<form method="get" class="filters">{% for f in form %}<label class="inline-field">{{ f.label }} {{ f }}</label>{% endfor %}<button class="btn ghost">Apply</button></form>{% endif %}
+{% if note %}<p class="muted">{{ note }}</p>{% endif %}
+{% if kpis %}<div class="tiles">{% for k in kpis %}<div class="tile static"><span class="tile-num">{{ k.value }}</span><span>{{ k.label }}</span></div>{% endfor %}</div>{% endif %}
+{% for t in tables %}
+<div class="card">
+  {% if t.title %}<h3>{{ t.title }}</h3>{% endif %}
+  <div class="table-wrap">
+  <table class="grid">
+    <thead><tr>{% for h in t.headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for r in t.rows %}<tr {% if r.url %}class="clickable" onclick="location.href='{{ r.url }}'"{% endif %}>{% for c in r.cells %}<td class="{% if c.num %}num{% endif %}">{{ c.v }}</td>{% endfor %}</tr>
+      {% empty %}<tr><td colspan="{{ t.headers|length }}" class="empty">No data for this selection.</td></tr>{% endfor %}
+    </tbody>
+    {% if t.totals %}<tfoot><tr>{% for c in t.totals %}<td class="{% if c.num %}num{% endif %}">{{ c.v }}</td>{% endfor %}</tr></tfoot>{% endif %}
+  </table>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% load erp %}<!doctype html><html><head><meta charset="utf-8"><title>Cheque {{ obj.cheque_no }}</title>
+<style>body{font-family:Arial,sans-serif;margin:24px}.cheque{width:203mm;height:89mm;border:1px dashed #999;position:relative;padding:8mm;box-sizing:border-box}
+.date{position:absolute;right:12mm;top:10mm;letter-spacing:3px}.payee{position:absolute;left:20mm;top:28mm;font-size:15px}.words{position:absolute;left:20mm;top:40mm;width:130mm;font-size:13px;line-height:1.8}
+.amt{position:absolute;right:14mm;top:42mm;font-size:16px;font-weight:bold}.ac{position:absolute;left:8mm;top:8mm;font-size:11px;transform:rotate(-12deg);border-top:1px solid;border-bottom:1px solid}
+.voucher{margin-top:16px;font-size:13px}@media print{.noprint{display:none}.cheque{border:none}}</style></head><body>
+<p class="noprint"><button onclick="window.print()">Print cheque</button> Align the cheque leaf to the dashed box.</p>
+<div class="cheque"><div class="ac">A/C PAYEE ONLY</div><div class="date">{{ obj.cheque_date|default:obj.date|date:"d m Y" }}</div>
+<div class="payee">{{ obj.payee_name|default:obj.vendor.name }}</div><div class="words">{{ obj.amount|words }}</div><div class="amt">**{{ obj.amount|money }}**</div></div>
+<div class="voucher"><strong>Payment voucher {{ obj.number }}</strong> · {{ obj.bank_account }} · cheque {{ obj.cheque_no }} · {{ obj.vendor.name }}
+<ul>{% for a in obj.allocations.all %}<li>{{ a.invoice.number }} ({{ a.invoice.vendor_invoice_no }}): {{ a.amount|money }}</li>{% endfor %}</ul></div>
+</body></html>

@@ -1,0 +1,7 @@
+{% extends "print/base_print.html" %}{% load erp %}
+{% block doctitle %}PURCHASE RETURN{% endblock %}
+{% block body %}
+<p><strong>Vendor:</strong> {{ obj.receipt.purchase_order.vendor.name }} · <strong>GRN:</strong> {{ obj.receipt.number }} · <strong>PO:</strong> {{ obj.receipt.purchase_order.number }} · <strong>Reason:</strong> {{ obj.reason }}</p>
+<table><thead><tr><th>Item</th><th class="num">Qty</th></tr></thead><tbody>{% for l in obj.lines.all %}<tr><td>{{ l.grn_line.product }}</td><td class="num">{{ l.qty|floatformat:-3 }}</td></tr>{% endfor %}</tbody></table>
+<div class="sign"><div>Storekeeper</div><div>Vendor received</div></div>
+{% endblock %}

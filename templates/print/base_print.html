@@ -1,0 +1,18 @@
+{% load erp %}<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>{{ obj }}</title>
+<style>
+ body{font-family:"Segoe UI",Arial,sans-serif;color:#1d2433;margin:32px;font-size:13px}
+ h1{font-size:20px;margin:0 0 4px} .head{display:flex;justify-content:space-between;border-bottom:2px solid #1d2433;padding-bottom:12px;margin-bottom:16px}
+ table{width:100%;border-collapse:collapse;margin:12px 0} th,td{border:1px solid #c9ced8;padding:6px 8px;text-align:left;vertical-align:top} th{background:#eef1f6}
+ .num{text-align:right;font-variant-numeric:tabular-nums} .meta td{border:none;padding:2px 8px 2px 0} .muted{color:#667} .terms{white-space:pre-wrap;font-size:12px}
+ .sign{display:flex;gap:48px;margin-top:48px} .sign div{border-top:1px solid #1d2433;padding-top:4px;min-width:180px}
+ @media print{body{margin:12mm} .noprint{display:none}}
+</style></head>
+<body>
+<p class="noprint"><button onclick="window.print()">Print / Save as PDF</button></p>
+<div class="head">
+  <div><h1>{{ company.name }}</h1><div class="muted">{{ company.address|linebreaksbr }}</div>{% if company.trn %}<div>TRN {{ company.trn }}</div>{% endif %}</div>
+  <div style="text-align:right"><h1>{% block doctitle %}{% endblock %}</h1><div><strong>{{ obj.number }}</strong></div><div>{{ obj.date|date:"d M Y" }}</div></div>
+</div>
+{% block body %}{% endblock %}
+</body></html>

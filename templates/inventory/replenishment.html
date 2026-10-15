@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load erp %}
+{% block title %}Replenishment{% endblock %}
+{% block crumbs %}Inventory / Replenishment{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Stock replenishment</h1>
+  <form method="post">{% csrf_token %}<button class="btn" {% if not rows %}disabled{% endif %}>Raise purchase requisition</button></form></div>
+<p class="muted">Items whose projected stock (on hand − reserved + on order) is below the reorder level.</p>
+<div class="card table-wrap"><table class="grid">
+<thead><tr><th>Code</th><th>Product</th><th class="num">Reorder level</th><th class="num">Projected</th><th class="num">Qty to request</th></tr></thead>
+<tbody>{% for r in rows %}<tr><td>{{ r.0 }}</td><td>{{ r.1 }}</td><td class="num">{{ r.2|floatformat:-3 }}</td><td class="num">{{ r.3|floatformat:-3 }}</td><td class="num">{{ r.4|floatformat:-3 }}</td></tr>
+{% empty %}<tr><td colspan="5" class="empty">All items are above their reorder level.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "print/base_print.html" %}{% load erp %}
+{% block doctitle %}GOODS RECEIPT NOTE{% endblock %}
+{% block body %}
+<p><strong>PO:</strong> {{ obj.purchase_order.number }} · <strong>Vendor:</strong> {{ obj.purchase_order.vendor.name }} · <strong>Warehouse:</strong> {{ obj.warehouse }} · <strong>Delivery note:</strong> {{ obj.delivery_note }}</p>
+<table><thead><tr><th>Item</th><th class="num">Received</th><th class="num">Accepted</th><th class="num">Rejected</th><th>QC</th><th>Notes</th></tr></thead>
+<tbody>{% for l in obj.lines.all %}<tr><td>{{ l.product }}</td><td class="num">{{ l.received_qty|floatformat:-3 }}</td><td class="num">{{ l.accepted_qty|floatformat:-3 }}</td><td class="num">{{ l.rejected_qty|floatformat:-3 }}</td><td>{{ l.get_qc_status_display }}</td><td>{{ l.qc_notes }}</td></tr>{% endfor %}</tbody></table>
+<div class="sign"><div>Received by</div><div>Inspected by {{ obj.inspected_by }}</div><div>Storekeeper</div></div>
+{% endblock %}

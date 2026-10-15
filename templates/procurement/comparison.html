@@ -1,0 +1,25 @@
+{% load erp %}
+<h3>Quote comparison (side by side)</h3>
+{% if cmp.quotes %}
+<div class="table-wrap">
+<table class="grid">
+  <thead>
+    <tr><th>Item</th><th class="num">Qty</th>{% for q in cmp.quotes %}<th class="num"><a href="{% url 'erp-detail' 'procurement' 'vendor-quotes' q.pk %}">{{ q.vendor.name }}</a><br><span class="small">{{ q|pill }}</span></th>{% endfor %}</tr>
+  </thead>
+  <tbody>
+  {% for r in cmp.rows %}
+    <tr><td>{{ r.line.product }}</td><td class="num">{{ r.line.qty|floatformat:-3 }}</td>
+      {% for c in r.cells %}<td class="num {% if c.best %}match-ok{% endif %}">{% if c.q %}{{ c.q.rate|money }}<br><span class="small muted">{{ c.q.amount|money }}</span>{% else %}—{% endif %}</td>{% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr><td>Total</td><td></td>{% for q in cmp.quotes %}<td class="num">{{ q.total|money }}</td>{% endfor %}</tr>
+    <tr><td>Lead time (days)</td><td></td>{% for q in cmp.quotes %}<td class="num">{{ q.lead_time_days }}</td>{% endfor %}</tr>
+    <tr><td>Payment terms</td><td></td>{% for q in cmp.quotes %}<td class="num">{{ q.payment_terms|default:"—" }}</td>{% endfor %}</tr>
+    <tr><td>Delivery terms</td><td></td>{% for q in cmp.quotes %}<td class="num">{{ q.delivery_terms|default:"—" }}</td>{% endfor %}</tr>
+  </tfoot>
+</table>
+</div>
+<p class="small muted">Lowest price per item is highlighted. Open a vendor quote and use “Select vendor → create PO”.</p>
+{% else %}<p class="muted">No vendor quotes yet. Choose vendors and use “Send to vendors”.</p>{% endif %}

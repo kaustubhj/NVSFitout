@@ -1,0 +1,50 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Fit-Out ERP{% endblock %} · {{ company.name|default:"Fit-Out ERP" }}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="logo">FO</span>
+      <span><strong>Fit-Out ERP</strong><small>{{ company.name }}</small></span>
+    </a>
+    <nav>
+      <a class="nav-top {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">◧ Dashboard</a>
+      {% for item in menu %}
+        <div class="nav-group {% if item.active %}open{% endif %}">
+          <a class="nav-top {% if item.active %}active{% endif %}" href="{% url 'erp-module' item.module.key %}">{{ item.module.icon }} {{ item.module.title }}</a>
+          {% if item.active %}
+          <div class="nav-sub">
+            {% for s in item.module.screens.values %}
+              <a href="{{ s.url }}" class="{% if s.slug in request.path %}current{% endif %}">{{ s.title }}</a>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      {% if user.is_superuser %}<a class="nav-top" href="/admin/">⚙ Admin</a>{% endif %}
+    </nav>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('show')">☰</button>
+      <div class="crumbs">{% block crumbs %}{% endblock %}</div>
+      <div class="user">
+        {{ user.get_full_name|default:user.username }}
+        <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}<button class="link">Sign out</button></form>
+      </div>
+    </header>
+    <div class="content">
+      {% for m in messages %}<div class="flash {{ m.tags }}">{{ m }}</div>{% endfor %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+<script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>

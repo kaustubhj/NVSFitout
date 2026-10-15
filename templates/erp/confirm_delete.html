@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card narrow">
+  <h2>Delete {{ screen.singular }} {{ obj }}?</h2>
+  <p>This cannot be undone.</p>
+  <form method="post">{% csrf_token %}<button class="btn danger">Delete</button> <a class="btn ghost" href="{{ screen.url }}{{ obj.pk }}/">Cancel</a></form>
+</div>
+{% endblock %}

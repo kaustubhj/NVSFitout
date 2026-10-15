@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load erp %}
+{% block title %}{{ obj }}{% endblock %}
+{% block crumbs %}<a href="{% url 'erp-module' screen.module.key %}">{{ screen.module.title }}</a> / <a href="{{ screen.url }}">{{ screen.title }}</a> / {{ obj }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ screen.singular }} {{ obj }} {{ obj|pill }}</h1>
+  <div class="btns">
+    {% for a in actions %}
+      <form method="post" action="{{ screen.url }}{{ obj.pk }}/do/{{ a.name }}/" class="inline action-form"
+            {% if a.confirm %}data-confirm="{{ a.confirm }}"{% endif %} {% if a.prompt %}data-prompt="{{ a.prompt }}"{% endif %}>
+        {% csrf_token %}<input type="hidden" name="comment">
+        <button class="btn {{ a.style }}">{{ a.label }}</button>
+      </form>
+    {% endfor %}
+    {% if screen.print_template %}<a class="btn ghost" target="_blank" href="{{ screen.url }}{{ obj.pk }}/print/">Print</a>{% endif %}
+    {% if editable %}<a class="btn ghost" href="{{ screen.url }}{{ obj.pk }}/edit/">Edit</a>{% endif %}
+    {% if deletable %}<a class="btn ghost danger" href="{{ screen.url }}{{ obj.pk }}/delete/">Delete</a>{% endif %}
+  </div>
+</div>
+{% if pending_rule %}<div class="flash info">Awaiting level {{ pending_rule.level }} approval by <strong>{{ pending_rule.group }}</strong>.</div>{% endif %}
+<div class="card">
+  <dl class="fields">
+    {% for f in fields %}<div class="{% if f.wide %}wide{% endif %}"><dt>{{ f.label }}</dt><dd>{{ f.value }}</dd></div>{% endfor %}
+  </dl>
+</div>
+{% if extra_panel %}<div class="card">{{ extra_panel }}</div>{% endif %}
+{% for l in lines %}
+<div class="card">
+  <h3>{{ l.title }}</h3>
+  <div class="table-wrap">
+  <table class="grid">
+    <thead><tr>{% for h in l.headers %}<th class="{% if h.num %}num{% endif %}">{{ h.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for r in l.rows %}<tr>{% for c in r.cells %}<td class="{% if c.num %}num{% endif %}">{{ c.value }}</td>{% endfor %}</tr>
+      {% empty %}<tr><td colspan="{{ l.headers|length }}" class="empty">No lines.</td></tr>{% endfor %}
+    </tbody>
+    {% if l.totals %}<tfoot><tr>{% for t in l.totals %}<td class="num">{{ t }}</td>{% endfor %}</tr></tfoot>{% endif %}
+  </table>
+  </div>
+</div>
+{% endfor %}
+{% for r in related %}
+<div class="card">
+  <h3>{{ r.title }}</h3>
+  <div class="table-wrap">
+  <table class="grid">
+    <thead><tr>{% for h in r.headers %}<th class="{% if h.num %}num{% endif %}">{{ h.label }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in r.rows %}<tr {% if row.url %}class="clickable" onclick="location.href='{{ row.url }}'"{% endif %}>{% for c in row.cells %}<td class="{% if c.num %}num{% endif %}">{{ c.value }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table>
+  </div>
+</div>
+{% endfor %}
+<div class="two-col">
+  <div class="card">
+    <h3>Attachments</h3>
+    <ul class="plain">{% for a in attachments %}<li><a href="{{ a.file.url }}" target="_blank">{{ a }}</a> <span class="muted small">{{ a.uploaded_by }} · {{ a.uploaded_at|date:"d M Y" }}</span></li>{% empty %}<li class="muted">None</li>{% endfor %}</ul>
+    <form method="post" enctype="multipart/form-data" action="{{ screen.url }}{{ obj.pk }}/attach/" class="attach">
+      {% csrf_token %}<input type="file" name="file" required><input name="description" placeholder="Description"><button class="btn ghost small">Upload</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3>Approvals &amp; history</h3>
+    <ul class="plain timeline">
+      {% for a in approvals %}<li><span class="pill {% if a.decision == 'approved' %}ok{% else %}bad{% endif %}">L{{ a.level }} {{ a.get_decision_display }}</span> {{ a.group_name }} · {{ a.user }} · {{ a.timestamp|date:"d M Y H:i" }} {% if a.comment %}— “{{ a.comment }}”{% endif %}</li>{% endfor %}
+      {% for h in history %}<li><span class="muted small">{{ h.timestamp|date:"d M Y H:i" }}</span> {{ h.user|default:"system" }} — {{ h.action }}{% if h.changes.comment %}: “{{ h.changes.comment }}”{% endif %}</li>{% empty %}<li class="muted">No history.</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

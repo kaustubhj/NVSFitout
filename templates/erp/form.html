@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{% if obj %}Edit {{ obj }}{% else %}New {{ screen.singular }}{% endif %}{% endblock %}
+{% block crumbs %}<a href="{% url 'erp-module' screen.module.key %}">{{ screen.module.title }}</a> / <a href="{{ screen.url }}">{{ screen.title }}</a> / {% if obj %}{{ obj }}{% else %}New{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{% if obj %}Edit {{ screen.singular }} {{ obj }}{% else %}New {{ screen.singular }}{% endif %}</h1></div>
+<form method="post" enctype="multipart/form-data" class="doc-form">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="flash error">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="card">
+    <div class="form-grid">
+      {% for field in form %}
+        <label class="field {% if field.field.widget.input_type == 'checkbox' %}check{% endif %} {% if field.field.widget.attrs.rows or field.field.widget.allow_multiple_selected %}wide{% endif %}">
+          <span>{{ field.label }}{% if field.field.required %} *{% endif %}</span>
+          {{ field }}
+          {% if field.help_text %}<small class="muted">{{ field.help_text }}</small>{% endif %}
+          {% for e in field.errors %}<small class="err">{{ e }}</small>{% endfor %}
+        </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% for fs in formsets %}
+  <div class="card">
+    <h3>{{ fs.inline.title }}</h3>
+    {{ fs.management_form }}
+    {% if fs.non_form_errors %}<div class="flash error">{{ fs.non_form_errors }}</div>{% endif %}
+    <div class="table-wrap">
+    <table class="grid lines" data-prefix="{{ fs.prefix }}">
+      <thead><tr>{% for f in fs.empty_form.visible_fields %}{% if f.name != 'DELETE' %}<th>{{ f.label }}</th>{% endif %}{% endfor %}<th>Del</th></tr></thead>
+      <tbody>
+        {% for lf in fs %}
+          <tr>
+            {% for h in lf.hidden_fields %}{{ h }}{% endfor %}
+            {% for f in lf.visible_fields %}{% if f.name != 'DELETE' %}<td>{{ f }}{% for e in f.errors %}<small class="err">{{ e }}</small>{% endfor %}</td>{% endif %}{% endfor %}
+            <td>{{ lf.DELETE }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <template>
+        <tr>
+          {% for h in fs.empty_form.hidden_fields %}{{ h }}{% endfor %}
+          {% for f in fs.empty_form.visible_fields %}{% if f.name != 'DELETE' %}<td>{{ f }}</td>{% endif %}{% endfor %}
+          <td>{{ fs.empty_form.DELETE }}</td>
+        </tr>
+      </template>
+    </table>
+    </div>
+    <button type="button" class="btn ghost small add-row">+ Add line</button>
+  </div>
+  {% endfor %}
+  <div class="btns sticky">
+    <button class="btn">Save</button>
+    {% if not obj %}<button class="btn ghost" name="save_add" value="1">Save and add another</button>{% endif %}
+    <a class="btn ghost" href="{% if obj %}{{ screen.url }}{{ obj.pk }}/{% else %}{{ screen.url }}{% endif %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

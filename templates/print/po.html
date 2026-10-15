@@ -1,0 +1,12 @@
+{% extends "print/base_print.html" %}{% load erp %}
+{% block doctitle %}PURCHASE ORDER{% endblock %}
+{% block body %}
+<table class="meta"><tr><td><strong>Vendor:</strong> {{ obj.vendor.name }}<br>{{ obj.vendor.address|linebreaksbr }}{% if obj.vendor.trn %}<br>TRN {{ obj.vendor.trn }}{% endif %}</td>
+<td><strong>Project:</strong> {{ obj.project|default:"—" }}<br><strong>Deliver to:</strong> {{ obj.warehouse }}<br><strong>Expected:</strong> {{ obj.expected_date|date:"d M Y" }}<br><strong>Payment terms:</strong> {{ obj.payment_terms }}<br><strong>Currency:</strong> {{ obj.currency|default:company.base_currency }}</td></tr></table>
+<table><thead><tr><th>#</th><th>Item</th><th>Description</th><th class="num">Qty</th><th>UoM</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+<tbody>{% for l in obj.lines.all %}<tr><td>{{ forloop.counter }}</td><td>{{ l.product.code }}</td><td>{{ l.product.name }} {{ l.description }}</td><td class="num">{{ l.qty|floatformat:-3 }}</td><td>{{ l.product.uom }}</td><td class="num">{{ l.rate|money }}</td><td class="num">{{ l.amount|money }}</td></tr>{% endfor %}</tbody>
+<tfoot><tr><td colspan="6" class="num">Subtotal</td><td class="num">{{ obj.subtotal|money }}</td></tr><tr><td colspan="6" class="num">VAT</td><td class="num">{{ obj.vat_amount|money }}</td></tr><tr><th colspan="6" class="num">Total</th><th class="num">{{ obj.total|money }}</th></tr></tfoot></table>
+<p><em>{{ obj.total|words }}</em></p>
+<p class="terms">{{ obj.delivery_terms }}</p>
+<div class="sign"><div>Procurement</div><div>Approved by</div><div>Vendor acceptance</div></div>
+{% endblock %}

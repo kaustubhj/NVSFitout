@@ -1,0 +1,22 @@
+{% load erp %}
+<h3>Project costing — budget vs actual</h3>
+<div class="table-wrap">
+<table class="grid">
+  <thead><tr><th>Cost category</th><th class="num">Budget (incl. approved VOs)</th><th class="num">Actual</th><th class="num">Variance</th><th>Consumed</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr><td>{{ r.label }}</td><td class="num">{{ r.budget|money }}</td><td class="num">{{ r.actual|money }}</td>
+      <td class="num {% if r.variance < 0 %}match-bad{% endif %}">{{ r.variance|money }}</td>
+      <td><div class="bar {% if r.pct > 100 %}over{% endif %}"><i style="width:{{ r.bar }}%"></i></div><span class="small muted">{{ r.pct }}%</span></td></tr>
+  {% endfor %}
+  </tbody>
+  <tfoot><tr><td>Total</td><td class="num">{{ data.total_budget|money }}</td><td class="num">{{ data.total_actual|money }}</td><td></td><td></td></tr></tfoot>
+</table>
+</div>
+<div class="tiles" style="margin-top:14px">
+  <div class="tile static"><span class="tile-num">{{ data.revenue|money }}</span><span>Revenue recognised</span></div>
+  <div class="tile static"><span class="tile-num">{{ data.gp|money }}</span><span>Gross profit ({{ data.gp_percent }}%)</span></div>
+  <div class="tile static"><span class="tile-num">{{ data.np|money }}</span><span>Net profit ({{ data.np_percent }}%)</span></div>
+  <div class="tile static"><span class="tile-num">{{ data.cost_completion_percent }}%</span><span>Cost-to-cost completion</span></div>
+  <div class="tile static"><span class="tile-num">{{ data.unbilled|money }}</span><span>Unbilled revenue (IFRS 15)</span></div>
+</div>

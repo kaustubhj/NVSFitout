@@ -1,0 +1,14 @@
+{% extends "print/base_print.html" %}{% load erp %}
+{% block doctitle %}PAYSLIPS {{ obj.month|stringformat:"02d" }}/{{ obj.year }}{% endblock %}
+{% block body %}
+{% for s in obj.payslips.all %}
+<table style="page-break-inside:avoid"><thead><tr><th colspan="4">{{ s.employee }} — {{ s.employee.designation|default:"" }} · {{ s.employee.get_employee_type_display }}</th></tr></thead>
+<tbody><tr><td>Days payable</td><td class="num">{{ s.days_payable }}</td><td>Food deduction</td><td class="num">{{ s.food_deduction|money }}</td></tr>
+<tr><td>Basic</td><td class="num">{{ s.basic|money }}</td><td>Loan / advance recovery</td><td class="num">{{ s.loan_recovery|money }}</td></tr>
+<tr><td>Allowances</td><td class="num">{{ s.allowances|money }}</td><td>Fines &amp; other</td><td class="num">{{ s.other_deductions|money }}</td></tr>
+<tr><td>Overtime ({{ s.normal_ot_hours }} / {{ s.friday_ot_hours }} / {{ s.holiday_ot_hours }} h)</td><td class="num">{{ s.ot_amount|money }}</td><td>Leave days paid in advance</td><td class="num">{{ s.unpaid_leave_deduction|money }}</td></tr>
+<tr><td>Leave salary</td><td class="num">{{ s.leave_salary|money }}</td><td><strong>Net (WPS)</strong></td><td class="num"><strong>{{ s.net|money }}</strong></td></tr>
+{% if s.cash_ot_amount %}<tr><td colspan="3">Cash OT (paid separately)</td><td class="num">{{ s.cash_ot_amount|money }}</td></tr>{% endif %}
+</tbody></table>
+{% endfor %}
+{% endblock %}

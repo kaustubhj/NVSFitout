@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ module.title }}{% endblock %}
+{% block crumbs %}{{ module.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ module.icon }} {{ module.title }}</h1></div>
+<div class="tiles">
+  {% for c in cards %}
+    <a class="tile" href="{{ c.screen.url }}"><span class="tile-num">{{ c.count }}</span><span>{{ c.screen.title }}</span></a>
+  {% endfor %}
+</div>
+{% for section, links in sections.items %}
+  <div class="card"><h3>{{ section }}</h3><div class="link-list">{% for title, url in links %}<a href="{{ url }}">{{ title }}</a>{% endfor %}</div></div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,13 @@
+{% load static %}<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sign in · Fit-Out ERP</title><link rel="stylesheet" href="{% static 'css/app.css' %}"></head>
+<body class="login-body">
+<form method="post" class="card login">
+  {% csrf_token %}
+  <div class="brand"><span class="logo">FO</span><span><strong>Fit-Out ERP</strong><small>Sign in to continue</small></span></div>
+  {% if form.errors %}<div class="flash error">Username or password is incorrect.</div>{% endif %}
+  <label class="field"><span>Username</span>{{ form.username }}</label>
+  <label class="field"><span>Password</span>{{ form.password }}</label>
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="btn block">Sign in</button>
+</form>
+</body></html>

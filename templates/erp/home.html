@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load erp %}
+{% block title %}Dashboard{% endblock %}
+{% block crumbs %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Good day, {{ user.first_name|default:user.username }}</h1></div>
+<div class="tiles">{% for label, value, url in kpis %}<a class="tile" href="{{ url }}"><span class="tile-num">{{ value }}</span><span>{{ label }}</span></a>{% endfor %}</div>
+<div class="card">
+  <h3>Process map</h3>
+  <div class="lanes">
+  {% for lane in lanes %}
+    <div class="lane lane-{{ lane.key }}"><div class="lane-title">{{ lane.title }}</div>
+      <div class="lane-steps">{% for label, url in lane.steps %}<a href="{{ url }}">{{ label }}</a>{% if not forloop.last %}<span class="arrow">→</span>{% endif %}{% endfor %}</div>
+    </div>
+  {% endfor %}
+  </div>
+  <p class="small muted">Cross-module flows: estimation sheet → store (no prices) · stock shortfall → PR · PO delivery → GRN · GRN posted → 3-way match · payroll → GL and project cost.</p>
+</div>
+<div class="card">
+  <h3>Active projects — budget consumption</h3>
+  <div class="table-wrap"><table class="grid">
+    <thead><tr><th>Project</th><th>Customer</th><th class="num">Revised contract</th><th class="num">Budget</th><th class="num">Actual</th><th>Consumed</th><th class="num">GP</th><th class="num">Unbilled</th></tr></thead>
+    <tbody>{% for r in projects %}<tr class="clickable" onclick="location.href='{% url 'erp-detail' 'projects' 'projects' r.p.pk %}'">
+      <td>{{ r.p }}</td><td>{{ r.p.customer.name }}</td><td class="num">{{ r.p.revised_contract_value|money }}</td><td class="num">{{ r.d.total_budget|money }}</td><td class="num">{{ r.d.total_actual|money }}</td>
+      <td><div class="bar {% if r.used > 100 %}over{% endif %}"><i style="width:{{ r.bar }}%"></i></div><span class="small muted">{{ r.used }}%</span></td>
+      <td class="num">{{ r.d.gp|money }}</td><td class="num">{{ r.d.unbilled|money }}</td></tr>
+    {% empty %}<tr><td colspan="8" class="empty">No active projects.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

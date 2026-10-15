@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load erp %}
+{% block title %}Bank reconciliation{% endblock %}
+{% block crumbs %}Accounts / Bank reconciliation{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Bank reconciliation</h1>
+  <form method="get" class="filters"><select name="bank" onchange="this.form.submit()">{% for b in banks %}<option value="{{ b.pk }}" {% if b == bank %}selected{% endif %}>{{ b }}</option>{% endfor %}</select></form>
+</div>
+{% if not bank %}<div class="card">Set up a bank account first.</div>{% else %}
+<div class="tiles">
+  <div class="tile static"><span class="tile-num">{{ book|money }}</span><span>Balance per books</span></div>
+  <div class="tile static"><span class="tile-num">{{ uncleared_in|money }}</span><span>Deposits not on statement</span></div>
+  <div class="tile static"><span class="tile-num">{{ uncleared_out|money }}</span><span>Payments not on statement</span></div>
+  <div class="tile static"><span class="tile-num">{{ statement|money }}</span><span>Balance per statement lines</span></div>
+  <div class="tile static {% if difference %}alert{% endif %}"><span class="tile-num">{{ difference|money }}</span><span>Unexplained difference</span></div>
+</div>
+<div class="card">
+  <h3>Import statement</h3>
+  <form method="post" enctype="multipart/form-data" class="attach">{% csrf_token %}<input type="hidden" name="bank" value="{{ bank.pk }}"><input type="hidden" name="action" value="upload">
+    <input type="file" name="file" accept=".csv" required><button class="btn ghost small">Upload CSV</button>
+    <span class="muted small">Columns: date, description, reference, amount (+ deposit / − withdrawal)</span></form>
+  <form method="post" style="margin-top:10px">{% csrf_token %}<input type="hidden" name="bank" value="{{ bank.pk }}"><input type="hidden" name="action" value="auto"><button class="btn small">Auto-match (amount ± 7 days)</button></form>
+</div>
+<div class="two-col">
+  <div class="card"><h3>Unmatched statement lines</h3>
+    <table class="grid"><thead><tr><th>Date</th><th>Description</th><th class="num">Amount</th><th>Match to</th></tr></thead><tbody>
+    {% for s in unmatched_stmt %}<tr><td>{{ s.date|date:"d M" }}</td><td>{{ s.description }}<br><span class="small muted">{{ s.reference }}</span></td><td class="num">{{ s.amount|money }}</td>
+      <td><form method="post" class="attach">{% csrf_token %}<input type="hidden" name="bank" value="{{ bank.pk }}"><input type="hidden" name="action" value="match"><input type="hidden" name="statement_line" value="{{ s.pk }}">
+        <select name="journal_line">{% for g in unmatched_gl %}<option value="{{ g.pk }}">{{ g.entry.date|date:"d M" }} {{ g.entry.number }} {% if g.base_debit %}+{{ g.base_debit|money }}{% else %}−{{ g.base_credit|money }}{% endif %}</option>{% endfor %}</select><button class="btn ghost small">Match</button></form></td></tr>
+    {% empty %}<tr><td colspan="4" class="empty">None</td></tr>{% endfor %}</tbody></table></div>
+  <div class="card"><h3>Uncleared book entries</h3>
+    <table class="grid"><thead><tr><th>Date</th><th>Voucher</th><th>Narration</th><th class="num">In</th><th class="num">Out</th></tr></thead><tbody>
+    {% for g in unmatched_gl %}<tr><td>{{ g.entry.date|date:"d M" }}</td><td>{{ g.entry.number }}</td><td>{{ g.entry.narration }}</td><td class="num">{{ g.base_debit|money }}</td><td class="num">{{ g.base_credit|money }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="empty">None</td></tr>{% endfor %}</tbody></table></div>
+</div>
+<div class="card"><h3>Matched (latest)</h3><table class="grid"><thead><tr><th>Date</th><th>Statement</th><th class="num">Amount</th><th>Voucher</th><th></th></tr></thead><tbody>
+{% for s in matched %}<tr><td>{{ s.date|date:"d M Y" }}</td><td>{{ s.description }}</td><td class="num">{{ s.amount|money }}</td><td>{{ s.matched_line.entry.number }}</td>
+<td><form method="post">{% csrf_token %}<input type="hidden" name="bank" value="{{ bank.pk }}"><input type="hidden" name="action" value="unmatch"><input type="hidden" name="statement_line" value="{{ s.pk }}"><button class="link">Unmatch</button></form></td></tr>
+{% empty %}<tr><td colspan="5" class="empty">None</td></tr>{% endfor %}</tbody></table></div>
+{% endif %}
+{% endblock %}

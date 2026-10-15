@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load erp %}
+{% block title %}Inventory dashboard{% endblock %}
+{% block crumbs %}Inventory / Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Inventory dashboard</h1></div>
+<div class="tiles">{% for label, v in kpis %}<div class="tile static"><span class="tile-num">{{ v }}</span><span>{{ label }}</span></div>{% endfor %}</div>
+<div class="dash-grid">
+  <div class="card"><h3>Stock by warehouse</h3><table class="grid"><thead><tr><th>Warehouse</th><th class="num">Qty</th><th class="num">Value</th></tr></thead>
+  <tbody>{% for w in by_wh %}<tr><td>{{ w.warehouse__code }} · {{ w.warehouse__name }}</td><td class="num">{{ w.n|floatformat:0 }}</td><td class="num">{{ w.v|money }}</td></tr>{% empty %}<tr><td colspan="3" class="empty">No stock yet.</td></tr>{% endfor %}</tbody></table></div>
+  <div class="card"><h3>Low stock <a class="small" href="{% url 'inv-replenishment' %}">→ replenish</a></h3><table class="grid"><thead><tr><th>Item</th><th class="num">Projected</th><th class="num">Reorder level</th></tr></thead>
+  <tbody>{% for p, projected, qty in low %}<tr><td>{{ p }}</td><td class="num match-bad">{{ projected|floatformat:-3 }}</td><td class="num">{{ p.reorder_level|floatformat:-3 }}</td></tr>{% empty %}<tr><td colspan="3" class="empty">Nothing below reorder level.</td></tr>{% endfor %}</tbody></table></div>
+</div>
+<div class="card"><h3>Recent movements</h3><div class="table-wrap"><table class="grid"><thead><tr><th>Date</th><th>Document</th><th>Type</th><th>Product</th><th>WH</th><th class="num">Qty</th><th class="num">Value</th></tr></thead>
+<tbody>{% for m in recent %}<tr><td>{{ m.date|date:"d M" }}</td><td>{{ m.reference }}</td><td>{{ m.move_type }}</td><td>{{ m.product }}</td><td>{{ m.warehouse.code }}</td><td class="num">{{ m.qty|floatformat:-3 }}</td><td class="num">{{ m.value|money }}</td></tr>{% empty %}<tr><td colspan="7" class="empty">No movements yet.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

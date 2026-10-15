@@ -1,0 +1,34 @@
+# One-click deployment on Render (render.com): New → Blueprint → pick this repository.
+databases:
+  - name: fitout-erp-db
+    plan: free
+services:
+  - type: web
+    name: fitout-erp
+    runtime: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn fitout.wsgi:application
+    envVars:
+      - key: ERP_DB_ENGINE
+        value: postgres
+      - key: ERP_DB_NAME
+        fromDatabase: {name: fitout-erp-db, property: database}
+      - key: ERP_DB_USER
+        fromDatabase: {name: fitout-erp-db, property: user}
+      - key: ERP_DB_PASSWORD
+        fromDatabase: {name: fitout-erp-db, property: password}
+      - key: ERP_DB_HOST
+        fromDatabase: {name: fitout-erp-db, property: host}
+      - key: ERP_DB_PORT
+        fromDatabase: {name: fitout-erp-db, property: port}
+      - key: ERP_SECRET_KEY
+        generateValue: true
+      - key: ERP_DEBUG
+        value: "0"
+      - key: ERP_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: ERP_LOAD_DEMO
+        value: "1"
+      - key: ERP_ADMIN_PASSWORD
+        sync: false

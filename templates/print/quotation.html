@@ -1,0 +1,15 @@
+{% extends "print/base_print.html" %}{% load erp %}
+{% block doctitle %}QUOTATION{% if obj.revision %} (Rev {{ obj.revision }}){% endif %}{% endblock %}
+{% block body %}
+<table class="meta"><tr><td><strong>To:</strong> {{ obj.customer.name }}<br>{{ obj.customer.address|linebreaksbr }}{% if obj.customer.trn %}<br>TRN {{ obj.customer.trn }}{% endif %}</td>
+<td><strong>Subject:</strong> {{ obj.subject }}<br><strong>Valid until:</strong> {{ obj.valid_until|date:"d M Y" }}<br><strong>Ref:</strong> {{ obj.lead.number }}</td></tr></table>
+<table><thead><tr><th>#</th><th>Section</th><th>Description</th><th class="num">Qty</th><th>UoM</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+<tbody>{% for l in obj.lines.all %}<tr><td>{{ forloop.counter }}</td><td>{{ l.section }}</td><td>{{ l.description }}</td><td class="num">{{ l.qty|floatformat:-3 }}</td><td>{{ l.uom }}</td><td class="num">{{ l.rate|money }}</td><td class="num">{{ l.amount|money }}</td></tr>{% endfor %}</tbody>
+<tfoot>{% if obj.discount %}<tr><td colspan="6" class="num">Discount</td><td class="num">−{{ obj.discount|money }}</td></tr>{% endif %}
+<tr><td colspan="6" class="num">Subtotal</td><td class="num">{{ obj.subtotal|money }}</td></tr>
+<tr><td colspan="6" class="num">VAT {{ company.vat_percent|floatformat:0 }}%</td><td class="num">{{ obj.vat_amount|money }}</td></tr>
+<tr><th colspan="6" class="num">Total</th><th class="num">{{ obj.total|money }}</th></tr></tfoot></table>
+<p><em>{{ obj.total|words }}</em></p>
+<h3>Terms &amp; conditions</h3><div class="terms">{{ obj.terms }}</div>
+<div class="sign"><div>Prepared by</div><div>Project Manager</div><div>Senior Manager</div></div>
+{% endblock %}

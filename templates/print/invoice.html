@@ -1,0 +1,14 @@
+{% extends "print/base_print.html" %}{% load erp %}
+{% block doctitle %}TAX INVOICE{% endblock %}
+{% block body %}
+<table class="meta"><tr><td><strong>Bill to:</strong> {{ obj.customer.name }}<br>{{ obj.customer.address|linebreaksbr }}{% if obj.customer.trn %}<br>TRN {{ obj.customer.trn }}{% endif %}</td>
+<td><strong>Project:</strong> {{ obj.project|default:"—" }}<br><strong>Contract / PO:</strong> {{ obj.contract.client_po_number|default:"—" }}<br><strong>Type:</strong> {{ obj.get_invoice_type_display }}{% if obj.cumulative_percent %} ({{ obj.cumulative_percent }}% cumulative){% endif %}<br><strong>Due:</strong> {{ obj.due_date|date:"d M Y" }}</td></tr></table>
+<table><thead><tr><th>Description</th><th class="num">Amount</th></tr></thead><tbody>
+<tr><td>{{ obj.description|default:obj.get_invoice_type_display }}{% if obj.contract %} — revised contract value {{ obj.contract.revised_value|money }}{% endif %}</td><td class="num">{{ obj.gross_amount|money }}</td></tr>
+{% if obj.advance_recovery %}<tr><td>Less: advance recovery</td><td class="num">−{{ obj.advance_recovery|money }}</td></tr>{% endif %}
+<tr><td>VAT {{ company.vat_percent|floatformat:0 }}%</td><td class="num">{{ obj.vat_amount|money }}</td></tr>
+{% if obj.retention_amount %}<tr><td>Less: retention held</td><td class="num">−{{ obj.retention_amount|money }}</td></tr>{% endif %}
+</tbody><tfoot><tr><th>Net amount due</th><th class="num">{{ obj.total|money }}</th></tr></tfoot></table>
+<p><em>{{ obj.total|words }}</em></p>
+<div class="sign"><div>Accounts</div><div>Authorised signatory</div></div>
+{% endblock %}
