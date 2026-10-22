@@ -75,6 +75,7 @@ def estimation_boq(request, est):
     boq = BOQ.objects.create(estimation=est, title=est.title, overhead_percent=est.overhead_percent)
     for l in est.lines.exclude(category="overhead"):
         BOQLine.objects.create(boq=boq, section=l.section, category=l.category, description=l.description,
+                               designation=l.designation, persons=l.persons, days=l.days, vendor=l.vendor,
                                qty=l.qty, uom=l.uom, unit_cost=l.unit_cost)
     boq.apply_margin()
     return open_edit(request, boq, "BOQ created from the estimation; set overhead and margin, then apply margin.")

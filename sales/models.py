@@ -126,18 +126,45 @@ class Estimation(Doc):
         return out
 
 
-class EstimationLine(models.Model):
-    estimation = models.ForeignKey(Estimation, on_delete=models.CASCADE, related_name="lines")
+class CostLineFields(models.Model):
+    """Columns shared by estimation and BOQ lines. Which ones a line uses depends on its cost category:
+    labour is persons x days x day rate, subcontract names the subcontractor, overhead is a lump sum."""
     section = models.CharField(max_length=80, blank=True)
     category = models.CharField(max_length=20, choices=COST_CATEGORIES, default="material")
-    product = models.ForeignKey("inventory.Product", null=True, blank=True, on_delete=models.PROTECT)
-    description = models.CharField(max_length=250)
+    designation = models.ForeignKey("hrms.Designation", null=True, blank=True, on_delete=models.PROTECT)
+    persons = qty_field("No. of persons", default=Decimal("1"))
+    days = qty_field("No. of days", default=Decimal("1"))
+    vendor = models.ForeignKey("procurement.Vendor", null=True, blank=True, on_delete=models.PROTECT,
+                               verbose_name="Subcontractor", limit_choices_to={"is_subcontractor": True})
+    description = models.CharField(max_length=250, blank=True)
     qty = qty_field(default=Decimal("1"))
     uom = models.CharField("UoM", max_length=15, default="nos")
     unit_cost = money_field()
-    amount = money_field(editable=False)
+
+    class Meta:
+        abstract = True
+
+    def fill_by_category(self):
+        if self.category == "labour":
+            self.qty = (self.persons or ZERO) * (self.days or ZERO)
+            self.uom = "man-day"
+            if not self.description and self.designation_id:
+                self.description = str(self.designation)
+        elif self.category == "overhead":
+            self.qty, self.uom = Decimal("1"), "lot"
+        if self.category == "subcontract" and not self.description and self.vendor_id:
+            self.description = f"Subcontract - {self.vendor.name}"
+        if not self.description:
+            self.description = self.get_category_display()
+
+
+class EstimationLine(CostLineFields):
+    estimation = models.ForeignKey(Estimation, on_delete=models.CASCADE, related_name="lines")
+    product = models.ForeignKey("inventory.Product", null=True, blank=True, on_delete=models.PROTECT)
+    amount = money_field("Total cost", editable=False)
 
     def save(self, *args, **kwargs):
+        self.fill_by_category()
         self.amount = q2(self.qty * self.unit_cost)
         super().save(*args, **kwargs)
 
@@ -179,19 +206,14 @@ class BOQ(Doc):
         return self.total_selling - self.total_cost
 
 
-class BOQLine(models.Model):
+class BOQLine(CostLineFields):
     boq = models.ForeignKey(BOQ, on_delete=models.CASCADE, related_name="lines")
-    section = models.CharField(max_length=80, blank=True)
-    category = models.CharField(max_length=20, choices=COST_CATEGORIES, default="material")
-    description = models.CharField(max_length=250)
-    qty = qty_field(default=Decimal("1"))
-    uom = models.CharField("UoM", max_length=15, default="nos")
-    unit_cost = money_field()
     selling_rate = money_field()
-    cost_amount = money_field(editable=False)
+    cost_amount = money_field("Total cost", editable=False)
     selling_amount = money_field(editable=False)
 
     def save(self, *args, **kwargs):
+        self.fill_by_category()
         self.cost_amount = q2(self.qty * self.unit_cost)
         self.selling_amount = q2(self.qty * self.selling_rate)
         super().save(*args, **kwargs)

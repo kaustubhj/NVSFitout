@@ -207,8 +207,10 @@ class RuleTests(TestCase):
 
     def test_estimation_cost_lines_have_a_section_per_category(self):
         from django.test import Client
+        from hrms.models import Designation
         from sales.models import COST_CATEGORIES, Customer, Estimation, Lead
 
+        helper = Designation.objects.get(name="Helper")
         lead = Lead.objects.create(title="Cat test", customer=Customer.objects.create(code="C9", name="Cat"))
         client = Client()
         client.login(username="estimator", password="pw-test-123")
@@ -219,18 +221,21 @@ class RuleTests(TestCase):
         for i in range(len(COST_CATEGORIES)):
             data.update({f"lines{i}-TOTAL_FORMS": "1" if i < 2 else "0", f"lines{i}-INITIAL_FORMS": "0"})
         data.update({"lines0-0-description": "Gypsum board", "lines0-0-qty": "10", "lines0-0-uom": "sqm",
-                     "lines0-0-unit_cost": "30", "lines1-0-description": "Carpenters", "lines1-0-qty": "5",
-                     "lines1-0-uom": "day", "lines1-0-unit_cost": "200"})
+                     "lines0-0-unit_cost": "30", "lines1-0-designation": helper.pk, "lines1-0-persons": "4",
+                     "lines1-0-days": "10", "lines1-0-unit_cost": "90"})
         resp = client.post("/m/sales/estimations/new/", data)
         self.assertEqual(resp.status_code, 302, resp.status_code == 200 and (
             resp.context["form"].errors, [fs.errors for fs in resp.context["formsets"]]))
         est = Estimation.objects.get(title="Split")
         self.assertEqual(dict(est.lines.values_list("description", "category")),
-                         {"Gypsum board": "material", "Carpenters": "labour"})
+                         {"Gypsum board": "material", "Helper": "labour"})
+        labour = est.lines.get(category="labour")  # persons x days x day rate
+        self.assertEqual((labour.qty, labour.uom, labour.amount), (D("40"), "man-day", D("3600")))
         # on edit each line stays in its own section
         edit = client.get(f"/m/sales/estimations/{est.pk}/edit/").content.decode()
         self.assertIn('name="lines0-0-description" value="Gypsum board"', edit)
-        self.assertIn('name="lines1-0-description" value="Carpenters"', edit)
+        self.assertIn('name="lines1-0-days" value="10.000"', edit)
+        self.assertIn("Per day rate", edit)
         self.assertNotIn('name="lines0-1-description"', edit)
 
     def test_quotation_needs_pm_then_sm(self):

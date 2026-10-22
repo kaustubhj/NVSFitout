@@ -111,12 +111,15 @@ def run_demo(stdout=None):
         ("Flooring", "material", "ADH-25", "Tile adhesive", 90, "bag", "22"),
         ("Joinery", "material", "MDF-18", "Joinery MDF", 60, "sht", "95"),
         ("Painting", "material", "PNT-EM", "Emulsion paint", 40, "pail", "145"),
-        ("Labour", "labour", None, "Installation labour (all trades)", 4200, "hr", "16"),
         ("MEP", "subcontract", None, "MEP modifications (subcontract)", 1, "ls", "120000"),
         ("General", "other", None, "Site preliminaries, scaffolding, cleaning", 1, "ls", "18000"),
     ]:
         EstimationLine.objects.create(estimation=est, section=section, category=cat, product=P.get(prod),
                                       description=desc, qty=qty, uom=uom, unit_cost=D(cost))
+    for desig, persons, days, rate in [("Skilled Labour", 10, 35, "150"), ("Helper", 5, 35, "84")]:
+        EstimationLine.objects.create(estimation=est, section="Labour", category="labour",
+                                      designation=Designation.objects.get(name=desig), persons=persons, days=days,
+                                      unit_cost=D(rate))
     est.recalc()
     act("estimator", swf.estimation_approve, est)
     act("estimator", swf.estimation_to_store, est)

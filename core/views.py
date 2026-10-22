@@ -64,7 +64,7 @@ def _formsets(screen, request, obj):
             screen.model, inline.model, fields=inline.fields, fk_name=inline.fk_name,
             extra=inline.extra if obj is None or not obj.pk else 0, can_delete=True,
             formfield_callback=formfield_callback,
-            formset=_scoped_formset(inline.where) if inline.where else BaseInlineFormSet,
+            formset=_scoped_formset(inline.where) if inline.where else BaseInlineFormSet, labels=inline.labels,
         )
         prefix = f"lines{i}"
         if request.method == "POST":
@@ -223,7 +223,7 @@ def detail_view(request, module, slug, pk):
         fk = inline.fk_name or next(
             f.name for f in inline.model._meta.fields if f.is_relation and f.related_model == screen.model)
         items = list(inline.model._default_manager.filter(**{fk: obj}, **inline.where))
-        headers = [{"label": column_label(inline.model, c),
+        headers = [{"label": inline.labels.get(c) or column_label(inline.model, c),
                     "num": bool(items) and is_numeric(items[0], c)} for c in inline.display]
         totals = []
         if inline.totals and items:
