@@ -7,7 +7,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import models, transaction
 from django.db.models import Q
-from django.forms import inlineformset_factory, modelform_factory
+from django.forms import BaseInlineFormSet, inlineformset_factory, modelform_factory
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -43,6 +43,18 @@ def _form_class(screen):
     return modelform_factory(screen.model, fields=fields, formfield_callback=formfield_callback)
 
 
+def _scoped_formset(where):
+    class Scoped(BaseInlineFormSet):
+        def get_queryset(self):
+            return super().get_queryset().filter(**where)
+
+        def save_new(self, form, commit=True):
+            for k, v in where.items():
+                setattr(form.instance, k, v)
+            return super().save_new(form, commit)
+    return Scoped
+
+
 def _formsets(screen, request, obj):
     sets = []
     for i, inline in enumerate(screen.inlines):
@@ -52,6 +64,7 @@ def _formsets(screen, request, obj):
             screen.model, inline.model, fields=inline.fields, fk_name=inline.fk_name,
             extra=inline.extra if obj is None or not obj.pk else 0, can_delete=True,
             formfield_callback=formfield_callback,
+            formset=_scoped_formset(inline.where) if inline.where else BaseInlineFormSet,
         )
         prefix = f"lines{i}"
         if request.method == "POST":
@@ -209,7 +222,7 @@ def detail_view(request, module, slug, pk):
     for inline in screen.inlines:
         fk = inline.fk_name or next(
             f.name for f in inline.model._meta.fields if f.is_relation and f.related_model == screen.model)
-        items = list(inline.model._default_manager.filter(**{fk: obj}))
+        items = list(inline.model._default_manager.filter(**{fk: obj}, **inline.where))
         headers = [{"label": column_label(inline.model, c),
                     "num": bool(items) and is_numeric(items[0], c)} for c in inline.display]
         totals = []

@@ -31,7 +31,7 @@ class Action:
 
 class Inline:
     def __init__(self, model, fields, fk_name=None, extra=1, title=None, totals=(),
-                 display=None, readonly=False):
+                 display=None, readonly=False, where=None):
         self.model = model
         self.fields = fields
         self.fk_name = fk_name
@@ -42,6 +42,9 @@ class Inline:
         self.display = display or fields
         # read-only inlines are shown on the detail page but not edited in the form
         self.readonly = readonly
+        # fixed field values for this table, e.g. {"category": "labour"}: only matching lines are shown,
+        # and new lines get these values, so one line model can be split into several sections
+        self.where = where or {}
 
 
 class Related:

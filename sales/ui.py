@@ -3,8 +3,8 @@ from core.workflow import can_approve
 
 from . import workflow as wf
 from .forms import use_customer_box
-from .models import (BOQ, BOQLine, Contract, Customer, Estimation, EstimationLine, Lead, Quotation, QuotationLine,
-                     SiteSurvey, TermsTemplate)
+from .models import (BOQ, COST_CATEGORIES, BOQLine, Contract, Customer, Estimation, EstimationLine, Lead, Quotation,
+                     QuotationLine, SiteSurvey, TermsTemplate)
 
 M = "sales"
 st = lambda *s: (lambda o: o.status in s)  # noqa: E731
@@ -66,10 +66,12 @@ class EstimationScreen(Screen):
     list_display = ("number", "date", "title", "lead", "revision", "total_cost", "status")
     search_fields = ("number", "title", "lead__title")
     form_fields = ("date", "lead", "title", "overhead_percent", "remarks")
-    inlines = (Inline(EstimationLine, ("section", "category", "product", "description", "qty", "uom", "unit_cost"),
-                      extra=5, title="Cost lines (material, labour, subcontract, other direct, overhead)",
-                      display=("section", "category", "product", "description", "qty", "uom", "unit_cost", "amount"),
-                      totals=("amount",)),)
+    inlines = tuple(
+        Inline(EstimationLine, ("section", "product", "description", "qty", "uom", "unit_cost"),
+               extra=2, title=f"{label} cost lines", where={"category": key},
+               display=("section", "product", "description", "qty", "uom", "unit_cost", "amount"),
+               totals=("amount",))
+        for key, label in COST_CATEGORIES)
     actions = (
         Action("approve", "Approve", wf.estimation_approve, st("draft"), style="success"),
         Action("boq", "+ Create BOQ", wf.estimation_boq, st("approved")),
@@ -95,10 +97,13 @@ class BOQScreen(Screen):
     form_fields = ("date", "estimation", "title", "overhead_percent", "margin_percent", "remarks")
     detail_fields = ("number", "date", "title", "estimation", "overhead_percent", "margin_percent", "total_cost",
                      "total_selling", ("Gross margin", "gross_margin"), "status", "remarks")
-    inlines = (Inline(BOQLine, ("section", "category", "description", "qty", "uom", "unit_cost", "selling_rate"),
-                      extra=3, display=("section", "category", "description", "qty", "uom", "unit_cost",
-                                        "cost_amount", "selling_rate", "selling_amount"),
-                      totals=("cost_amount", "selling_amount")),)
+    inlines = tuple(
+        Inline(BOQLine, ("section", "description", "qty", "uom", "unit_cost", "selling_rate"),
+               extra=1, title=f"{label} lines", where={"category": key},
+               display=("section", "description", "qty", "uom", "unit_cost", "cost_amount", "selling_rate",
+                        "selling_amount"),
+               totals=("cost_amount", "selling_amount"))
+        for key, label in COST_CATEGORIES)
     actions = (
         Action("margin", "Apply overhead & margin", wf.boq_apply_margin, st("draft")),
         Action("approve", "Approve BOQ", wf.boq_approve, st("draft"), style="success"),
